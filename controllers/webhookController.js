@@ -34,7 +34,9 @@ export const receiveWebhook = async (req, res) => {
             ) {
                 const message = body.entry[0].changes[0].value.messages[0];
                 const from = message.from;
-                const msgBody = message.text.body;
+
+                // FIXED: Use optional chaining to prevent crash if .text is missing
+                const msgBody = message.text?.body || `Received a ${message.type} message`;
                 const messageId = message.id;
 
                 console.log(`Incoming message from ${from}: ${msgBody}`);
@@ -55,8 +57,8 @@ export const receiveWebhook = async (req, res) => {
                     }
                 });
 
-                // 3. Chatbot Logic
-                if (contact) {
+                // 3. Chatbot Logic (only if it's text)
+                if (contact && message.text) {
                     const rules = await prisma.chatbotRule.findMany({
                         where: { user_id: contact.user_id }
                     });
@@ -69,14 +71,14 @@ export const receiveWebhook = async (req, res) => {
                     }
                 }
 
-                // 4. Update Socket.io (to be implemented in server.js)
+                // 4. Update Socket.io
                 if (global.io) {
                     global.io.emit('new_message', { from, body: msgBody, messageId });
                     global.io.emit('dashboard_update');
                 }
             }
 
-            // Handle Status Updates
+            // Handle Status Updates (sent, delivered, read)
             if (
                 body.entry &&
                 body.entry[0].changes &&
@@ -85,7 +87,7 @@ export const receiveWebhook = async (req, res) => {
             ) {
                 const statusUpdate = body.entry[0].changes[0].value.statuses[0];
                 const msgId = statusUpdate.id;
-                const status = statusUpdate.status; // delivered, read, failed
+                const status = statusUpdate.status;
 
                 await prisma.message.updateMany({
                     where: { message_id: msgId },
@@ -104,6 +106,7 @@ export const receiveWebhook = async (req, res) => {
         }
     } catch (error) {
         console.error('Webhook processing error:', error);
-        res.sendStatus(500);
+        // Important: Always send 200/202 to Meta to acknowledge receipt, even on local errors
+        res.sendStatus(200);
     }
 };
