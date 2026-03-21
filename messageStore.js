@@ -30,8 +30,8 @@ function addMessage(msg) {
     content: msg.content,
     is_incoming: !!msg.is_incoming,
     created_at: msg.created_at || new Date().toISOString(),
-    from: msg.from, // phone number for incoming
-    to: msg.to     // phone number for outgoing
+    from: msg.from ? String(msg.from).replace(/\D/g, '') : null,
+    to: msg.to ? String(msg.to).replace(/\D/g, '') : null
   };
   messages.push(newMsg);
   save();
@@ -39,8 +39,9 @@ function addMessage(msg) {
 }
 
 function getHistory(phone) {
-  // Return messages where either 'from' or 'to' matches the contact's phone
-  return messages.filter(m => m.from === phone || m.to === phone);
+  const normalizedPhone = String(phone).replace(/\D/g, '');
+  console.log('Fetching history for normalized phone:', normalizedPhone);
+  return messages.filter(m => (m.from === normalizedPhone || m.to === normalizedPhone));
 }
 
 module.exports = {
