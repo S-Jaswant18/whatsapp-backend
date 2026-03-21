@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  username      String         @unique
+  email         String         @unique
+  password      String
+  profile_photo String?
+  company_name  String?
+  bio           String?
+  created_at    DateTime       @default(now())
+  contacts      Contact[]
+  campaigns     Campaign[]
+  chatbot_rules ChatbotRule[]
+}
+
+model Contact {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  user       User      @relation(fields: [user_id], references: [id])
+  name       String
+  phone      String
+  group_name String?
+  created_at DateTime  @default(now())
+  messages   Message[]
+
+  @@index([user_id])
+}
+
+model Campaign {
+  id             Int       @id @default(autoincrement())
+  user_id        Int
+  user           User      @relation(fields: [user_id], references: [id])
+  name           String
+  template_name  String
+  scheduled_time DateTime?
+  status         String    @default("draft") // draft, scheduled, processing, completed, failed
+  created_at     DateTime  @default(now())
+  messages       Message[]
+
+  @@index([user_id])
+}
+
+model Message {
+  id          Int      @id @default(autoincrement())
+  campaign_id Int?
+  campaign    Campaign? @relation(fields: [campaign_id], references: [id])
+  contact_id  Int?
+  contact     Contact?  @relation(fields: [contact_id], references: [id])
+  message_id  String?  @unique // Meta ID
+  status      String   @default("pending") // pending, sent, delivered, read, failed
+  content     String?  // For incoming messages or custom text
+  is_incoming Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  @@index([campaign_id])
+  @@index([contact_id])
+}
+
+model ChatbotRule {
+  id              Int      @id @default(autoincrement())
+  user_id         Int
+  user            User     @relation(fields: [user_id], references: [id])
+  trigger_keyword String
+  reply_template  String
+  created_at      DateTime @default(now())
+
+  @@index([user_id])
+}

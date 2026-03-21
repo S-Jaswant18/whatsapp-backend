@@ -1,2 +1,11 @@
+<<<<<<< HEAD
 .env
 node_modules
+=======
+node_modules/
+.env
+dev.db
+dev.db-journal
+logs/
+.DS_Store
+>>>>>>> a72bed9b6991a9d8b79abfcbc09917ee3a10667f

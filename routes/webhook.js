@@ -12,14 +12,19 @@ router.get('/', function(req, res) {
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
+  console.log('Webhook Verification Request:', { mode, token, challenge });
+  console.log('Expecting token:', process.env.WEBHOOK_VERIFY_TOKEN);
+
   if (mode && token) {
     if (mode === 'subscribe' && token === process.env.WEBHOOK_VERIFY_TOKEN) {
-      console.log('WEBHOOK_VERIFIED');
+      console.log('WEBHOOK_VERIFIED - SUCCESS');
       return res.status(200).send(challenge);
     } else {
+      console.warn('WEBHOOK_VERIFICATION_FAILED - Mismatched Token');
       return res.sendStatus(403);
     }
   }
+  console.error('WEBHOOK_VERIFICATION_FAILED - Missing query params');
   return res.sendStatus(400);
 });
 
