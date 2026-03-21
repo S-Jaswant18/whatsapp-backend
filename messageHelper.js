@@ -18,7 +18,10 @@ function sendMessage(data) {
     data: data
   };
 
-  return axios(config)
+  return axios(config).then(response => {
+    console.log('WhatsApp API Response:', response.data);
+    return response;
+  });
 }
 
 function getTextMessageInput(recipient, text) {

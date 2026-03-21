@@ -1,8 +1,5 @@
 /* Copyright (c) Meta Platforms, Inc. and affiliates.
 * All rights reserved.
-*
-* This source code is licensed under the license found in the
-* LICENSE file in the root directory of this source tree.
 */
 
 var createError = require('http-errors');
@@ -11,10 +8,20 @@ require('dotenv').config();
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var cors = require('cors');
 
 var indexRouter = require('./routes/index');
+var webhookRouter = require('./routes/webhook');
+var messageRouter = require('./routes/message');
+var authRouter = require('./routes/auth');
+var contactsRouter = require('./routes/contacts');
+var campaignRouter = require('./routes/campaigns');
+var chatbotRouter = require('./routes/chatbot');
 
 var app = express();
+
+// Enable CORS for frontend flexibility
+app.use(cors());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -25,7 +32,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+// Webhook for WhatsApp API verification and incoming messages
+app.use('/webhook', webhookRouter);
 
+// API routes for messaging, auth, and contacts
+app.use('/api/messages', messageRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/contacts', contactsRouter);
+app.use('/api/campaigns', campaignRouter);
+app.use('/api/chatbot', chatbotRouter);
+
+// Home route (optional for local browsing)
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler
